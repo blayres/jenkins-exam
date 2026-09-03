@@ -25,7 +25,7 @@ pipeline {
                     echo "Waiting for Movie API..."
                     success=false
 
-                    for i in {1..30}; do
+                    for i in $(seq 1 30); do
                       if curl -sf http://localhost:8001/api/v1/movies/docs > /dev/null; then
                         success=true
                         echo "Movie API OK"
@@ -45,7 +45,7 @@ pipeline {
                     echo "Waiting for Cast API..."
                     success=false
 
-                    for i in {1..30}; do
+                    for i in $(seq 1 30); do
                       if curl -sf http://localhost:8002/api/v1/casts/docs > /dev/null; then
                         success=true
                         echo "Cast API OK"
