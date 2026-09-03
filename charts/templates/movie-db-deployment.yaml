@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-movie-db
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: movie-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: movie-db
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: movie-db
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.movieDb.image }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.movie.database.name | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.movie.database.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.movie.database.password | quote }}

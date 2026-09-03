@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-movie
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: movie
+spec:
+  replicas: {{ .Values.movie.replicaCount }}
+  selector:
+    matchLabels:
+      app: movie
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: movie
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: movie-service
+          image: "{{ .Values.movie.image.repository }}:{{ .Values.movie.image.tag }}"
+          imagePullPolicy: {{ .Values.movie.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_URI
+              value: "postgresql://{{ .Values.movie.database.username }}:{{ .Values.movie.database.password }}@{{ include "jenkins-exam.fullname" . }}-movie-db:{{ .Values.movie.database.port }}/{{ .Values.movie.database.name }}"
+            - name: CAST_SERVICE_HOST_URL
+              value: "http://{{ include "jenkins-exam.fullname" . }}-cast:8000/api/v1/casts/"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/movies/docs
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/movies/docs
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20

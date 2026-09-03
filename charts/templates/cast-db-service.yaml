@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-cast-db
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: cast-db
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.castDb.port }}
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: cast-db
+    release: {{ .Release.Name }}

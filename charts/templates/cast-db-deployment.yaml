@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-cast-db
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: cast-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cast-db
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: cast-db
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.castDb.image }}
+          ports:
+            - name: postgres
+              containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.cast.database.name | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.cast.database.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.cast.database.password | quote }}

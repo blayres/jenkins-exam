@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-movie
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: movie
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.movie.service.port }}
+      targetPort: 8000
+      protocol: TCP
+      name: http
+  selector:
+    app: movie
+    release: {{ .Release.Name }}

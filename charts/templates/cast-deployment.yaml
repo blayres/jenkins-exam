@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jenkins-exam.fullname" . }}-cast
+  labels:
+    {{- include "jenkins-exam.labels" . | nindent 4 }}
+    app: cast
+spec:
+  replicas: {{ .Values.cast.replicaCount }}
+  selector:
+    matchLabels:
+      app: cast
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: cast
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: cast-service
+          image: "{{ .Values.cast.image.repository }}:{{ .Values.cast.image.tag }}"
+          imagePullPolicy: {{ .Values.cast.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          env:
+            - name: DATABASE_URI
+              value: "postgresql://{{ .Values.cast.database.username }}:{{ .Values.cast.database.password }}@{{ include "jenkins-exam.fullname" . }}-cast-db:{{ .Values.cast.database.port }}/{{ .Values.cast.database.name }}"
+          readinessProbe:
+            httpGet:
+              path: /api/v1/casts/docs
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/v1/casts/docs
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
