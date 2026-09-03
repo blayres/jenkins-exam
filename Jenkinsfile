@@ -23,28 +23,42 @@ pipeline {
 
                 sh '''
                     echo "Waiting for Movie API..."
+                    success=false
+
                     for i in {1..30}; do
                       if curl -sf http://localhost:8001/api/v1/movies/docs > /dev/null; then
+                        success=true
+                        echo "Movie API OK"
                         break
                       fi
+                      echo "Movie API not ready yet (attempt $i/30)"
                       sleep 2
                     done
 
-                    curl -f http://localhost:8001/api/v1/movies/docs > /dev/null
-                    echo "Movie API OK"
+                    if [ "$success" != "true" ]; then
+                      echo "Movie API failed to become ready"
+                      exit 1
+                    fi
                 '''
 
                 sh '''
                     echo "Waiting for Cast API..."
+                    success=false
+
                     for i in {1..30}; do
                       if curl -sf http://localhost:8002/api/v1/casts/docs > /dev/null; then
+                        success=true
+                        echo "Cast API OK"
                         break
                       fi
+                      echo "Cast API not ready yet (attempt $i/30)"
                       sleep 2
                     done
 
-                    curl -f http://localhost:8002/api/v1/casts/docs > /dev/null
-                    echo "Cast API OK"
+                    if [ "$success" != "true" ]; then
+                      echo "Cast API failed to become ready"
+                      exit 1
+                    fi
                 '''
             }
 
