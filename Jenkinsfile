@@ -122,6 +122,27 @@ pipeline {
                 }
             }
         }
+
+	stage('Deploy QA') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'config',
+                        variable: 'KUBECONFIG_FILE'
+                    )
+                ]) {
+                    sh '''
+                        export KUBECONFIG="$KUBECONFIG_FILE"
+
+                        helm upgrade --install jenkins-exam-qa ./charts \
+                          --namespace qa \
+                          --create-namespace \
+                          --set movie.image.tag=${BUILD_NUMBER} \
+                          --set cast.image.tag=${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
     }
 
     post {
