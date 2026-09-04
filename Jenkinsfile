@@ -164,6 +164,35 @@ pipeline {
                 }
             }
         }
+
+	stage('Deploy PROD') {
+            when {
+                branch 'master'
+            }
+
+            steps {
+                timeout(time: 15, unit: 'MINUTES') {
+                    input message: 'Deploy to Production?', ok: 'Deploy'
+                }
+
+                withCredentials([
+                    file(
+                        credentialsId: 'config',
+                        variable: 'KUBECONFIG_FILE'
+                    )
+                ]) {
+                    sh '''
+                        export KUBECONFIG="$KUBECONFIG_FILE"
+
+                        helm upgrade --install jenkins-exam-prod ./charts \
+                          --namespace prod \
+                          --create-namespace \
+                          --set movie.image.tag=${BUILD_NUMBER} \
+                          --set cast.image.tag=${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
     }
 
     post {
