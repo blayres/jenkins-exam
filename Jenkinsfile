@@ -26,18 +26,19 @@ pipeline {
                     success=false
 
                     for i in $(seq 1 30); do
-                      if curl -sf http://localhost:8001/api/v1/movies/docs > /dev/null; then
-                        success=true
-                        echo "Movie API OK"
-                        break
-                      fi
-                      echo "Movie API not ready yet (attempt $i/30)"
-                      sleep 2
+                        if curl -sf http://localhost:8001/api/v1/movies/docs > /dev/null; then
+                            success=true
+                            echo "Movie API OK"
+                            break
+                        fi
+
+                        echo "Movie API not ready yet (attempt $i/30)"
+                        sleep 2
                     done
 
                     if [ "$success" != "true" ]; then
-                      echo "Movie API failed to become ready"
-                      exit 1
+                        echo "Movie API failed to become ready"
+                        exit 1
                     fi
                 '''
 
@@ -46,18 +47,19 @@ pipeline {
                     success=false
 
                     for i in $(seq 1 30); do
-                      if curl -sf http://localhost:8002/api/v1/casts/docs > /dev/null; then
-                        success=true
-                        echo "Cast API OK"
-                        break
-                      fi
-                      echo "Cast API not ready yet (attempt $i/30)"
-                      sleep 2
+                        if curl -sf http://localhost:8002/api/v1/casts/docs > /dev/null; then
+                            success=true
+                            echo "Cast API OK"
+                            break
+                        fi
+
+                        echo "Cast API not ready yet (attempt $i/30)"
+                        sleep 2
                     done
 
                     if [ "$success" != "true" ]; then
-                      echo "Cast API failed to become ready"
-                      exit 1
+                        echo "Cast API failed to become ready"
+                        exit 1
                     fi
                 '''
             }
@@ -99,6 +101,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy DEV') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'config',
+                        variable: 'KUBECONFIG_FILE'
+                    )
+                ]) {
+                    sh '''
+                        export KUBECONFIG="$KUBECONFIG_FILE"
+
+                        helm upgrade --install jenkins-exam-dev ./charts \
+                          --namespace dev \
+                          --create-namespace \
+                          --set movie.image.tag=${BUILD_NUMBER} \
+                          --set cast.image.tag=${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
     }
 
     post {
@@ -107,11 +130,11 @@ pipeline {
         }
 
         success {
-            echo 'CI pipeline completed successfully.'
+            echo 'CI/CD pipeline completed successfully.'
         }
 
         failure {
-            echo 'CI pipeline failed.'
+            echo 'CI/CD pipeline failed.'
         }
     }
 }
