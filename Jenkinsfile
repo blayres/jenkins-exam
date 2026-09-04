@@ -143,6 +143,27 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy STAGING') {
+            steps {
+                withCredentials([
+                    file(
+                        credentialsId: 'config',
+                        variable: 'KUBECONFIG_FILE'
+                    )
+                ]) {
+                    sh '''
+                        export KUBECONFIG="$KUBECONFIG_FILE"
+
+                        helm upgrade --install jenkins-exam-staging ./charts \
+                          --namespace staging \
+                          --create-namespace \
+                          --set movie.image.tag=${BUILD_NUMBER} \
+                          --set cast.image.tag=${BUILD_NUMBER}
+                    '''
+                }
+            }
+        }
     }
 
     post {
